@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            relay-daemon/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('relay-daemon/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        working-directory: relay-daemon
+        run: cargo fmt --check
+
+      - name: Clippy (warnings as errors)
+        working-directory: relay-daemon
+        run: cargo clippy -- -D warnings
+
+      - name: Build
+        working-directory: relay-daemon
+        run: cargo build --verbose
+
+      - name: Run tests
+        working-directory: relay-daemon
+        run: cargo test --verbose
+
+      - name: Check web-reader syntax
+        run: |
+          python3 -c "
+import json, sys
+with open('web-reader/index.html') as f:
+    html = f.read()
+    if '<!DOCTYPE html>' in html and '</html>' in html:
+        print('web-reader/index.html: valid HTML structure')
+    else:
+        print('web-reader/index.html: INVALID HTML')
+        sys.exit(1)
+"
+
+      - name: Verify critical files
+        run: |
+          REQUIRED="relay-daemon/Cargo.toml relay-daemon/src/main.rs relay-daemon/src/api.rs relay-daemon/src/db.rs relay-daemon/src/config.rs relay-daemon/src/models.rs relay-daemon/config.example.toml web-reader/index.html README.md"
+          MISSING=0
+          for f in $REQUIRED; do
+            if [ ! -f "$f" ]; then
+              echo "Missing: $f"
+              MISSING=$((MISSING+1))
+            fi
+          done
+          if [ $MISSING -gt 0 ]; then
+            echo "$MISSING critical files missing"
+            exit 1
+          fi
+          echo "All critical files present"
