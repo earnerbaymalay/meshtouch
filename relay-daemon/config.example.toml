@@ -1,0 +1,21 @@
+# MeshRelay — Default Relay Configuration
+# Copy to config.toml and customize
+
+relay_id = "relay_default"
+host = "0.0.0.0"
+port = 8080
+database_path = "messages.db"
+max_message_size = 65536       # 64KB max ciphertext
+max_messages_per_user = 1000   # Cap per user to prevent abuse
+cleanup_interval_minutes = 60  # How often to purge expired messages
+
+# Known peer relays (for relay-to-relay forwarding)
+[[known_peers]]
+id = "relay_alpha"
+url = "https://alpha.meshtouch.link"
+public_key = "..."
+
+[[known_peers]]
+id = "relay_beta"
+url = "https://beta.meshtouch.link"
+public_key = "..."

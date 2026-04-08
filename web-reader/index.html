@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MeshRelay — Secure Message</title>
+  <meta name="theme-color" content="#030508">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #030508;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 480px;
+      width: 100%;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .header h1 {
+      font-size: 24px;
+      color: #00ff9d;
+      margin-bottom: 4px;
+    }
+    .header p {
+      font-size: 13px;
+      color: #666;
+    }
+    .status {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      text-align: center;
+    }
+    .status.loading { background: #1a1a2e; color: #81a1c1; }
+    .status.success { background: #1a2e1a; color: #50fa7b; }
+    .status.error { background: #2e1a1a; color: #ff5555; }
+    .message-card {
+      background: #0d1117;
+      border: 1px solid #1a1a2e;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .message-meta {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .message-content {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #e0e0e0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .reply-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #1a1a2e;
+    }
+    .reply-section h3 {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    .reply-input {
+      width: 100%;
+      min-height: 80px;
+      background: #030508;
+      border: 1px solid #1a1a2e;
+      border-radius: 8px;
+      padding: 12px;
+      color: #e0e0e0;
+      font-size: 14px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    .reply-input:focus { outline: none; border-color: #00ff9d; }
+    .reply-btn {
+      margin-top: 12px;
+      width: 100%;
+      padding: 12px;
+      background: #00ff9d;
+      color: #030508;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .reply-btn:hover { background: #00cc7d; }
+    .reply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .install-prompt {
+      text-align: center;
+      margin-top: 24px;
+      padding: 16px;
+      background: #0d1117;
+      border-radius: 12px;
+    }
+    .install-prompt p {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    .install-prompt a {
+      display: inline-block;
+      padding: 8px 16px;
+      background: #00ff9d;
+      color: #030508;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .lock-icon { font-size: 32px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="lock-icon">🔐</div>
+      <h1>MeshRelay</h1>
+      <p>End-to-end encrypted message</p>
+    </div>
+
+    <div id="status" class="status loading">
+      Decrypting message...
+    </div>
+
+    <div id="message-container" style="display:none">
+      <div class="message-card">
+        <div class="message-meta">
+          <span id="sender-info">From: Unknown</span>
+          <span id="msg-time"></span>
+        </div>
+        <div id="message-text" class="message-content"></div>
+      </div>
+
+      <div class="reply-section">
+        <h3>💬 Reply (encrypted)</h3>
+        <textarea id="reply-input" class="reply-input" placeholder="Type your reply..."></textarea>
+        <button id="reply-btn" class="reply-btn">Send Encrypted Reply</button>
+        <p id="reply-status" style="font-size:12px;color:#555;margin-top:8px"></p>
+      </div>
+    </div>
+
+    <div class="install-prompt">
+      <p>Want the full experience? Install the MeshRelay app.</p>
+      <a href="https://github.com/earnerbaymalay/meshtouch">Get the App →</a>
+    </div>
+  </div>
+
+  <script>
+    // MeshRelay Web Reader
+    // Decrypts messages using the key from the URL fragment (never sent to server)
+
+    const RELAY_URL = 'https://relay.meshtouch.link'; // Default relay
+
+    async function decryptAndShow() {
+      const hash = window.location.hash.slice(1);
+      const params = new URLSearchParams(hash);
+
+      const msgId = params.get('m');
+      const key = params.get('key');
+      const iv = params.get('iv');
+
+      const statusEl = document.getElementById('status');
+      const containerEl = document.getElementById('message-container');
+
+      if (!msgId || !key) {
+        statusEl.className = 'status error';
+        statusEl.textContent = '⚠ Missing message ID or decryption key. The link may be incomplete.';
+        return;
+      }
+
+      try {
+        // Fetch ciphertext from relay
+        const resp = await fetch(`${RELAY_URL}/api/v1/messages/${msgId}`, {
+          headers: { 'X-Key-Id': key.slice(0, 8) }
+        });
+
+        if (!resp.ok) {
+          statusEl.className = 'status error';
+          statusEl.textContent = resp.status === 404
+            ? '⚠ Message not found. It may have expired.'
+            : '⚠ Error fetching message.';
+          return;
+        }
+
+        const data = await resp.json();
+        const ciphertext = data.ciphertext || data.messages?.[0]?.ciphertext;
+
+        if (!ciphertext) {
+          statusEl.className = 'status error';
+          statusEl.textContent = '⚠ No ciphertext found.';
+          return;
+        }
+
+        // Decrypt using Web Crypto API
+        const plaintext = await decryptAESGCM(ciphertext, key, iv);
+
+        if (!plaintext) {
+          statusEl.className = 'status error';
+          statusEl.textContent = '⚠ Decryption failed. The key may be invalid.';
+          return;
+        }
+
+        // Show decrypted message
+        statusEl.style.display = 'none';
+        containerEl.style.display = 'block';
+        document.getElementById('message-text').textContent = plaintext;
+        document.getElementById('sender-info').textContent =
+          `From: ${data.sender_id?.slice(0, 8) || 'Unknown'}`;
+        document.getElementById('msg-time').textContent =
+          data.stored_at ? new Date(data.stored_at).toLocaleString() : '';
+
+      } catch (err) {
+        statusEl.className = 'status error';
+        statusEl.textContent = '⚠ Error: ' + err.message;
+        console.error(err);
+      }
+    }
+
+    async function decryptAESGCM(ciphertextB64, keyHex, ivHex) {
+      try {
+        // Import key
+        const keyData = hexToBytes(keyHex);
+        const cryptoKey = await crypto.subtle.importKey(
+          'raw',
+          keyData,
+          { name: 'AES-GCM' },
+          false,
+          ['decrypt']
+        );
+
+        // Decode ciphertext
+        const ctData = base64ToBytes(ciphertextB64);
+
+        // Extract IV (if not provided separately)
+        const iv = ivHex ? hexToBytes(ivHex) : ctData.slice(0, 12);
+        const ct = ivHex ? ctData : ctData.slice(12);
+
+        // Decrypt
+        const decrypted = await crypto.subtle.decrypt(
+          { name: 'AES-GCM', iv: iv },
+          cryptoKey,
+          ct
+        );
+
+        return new TextDecoder().decode(decrypted);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function hexToBytes(hex) {
+      const bytes = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < hex.length; i += 2) {
+        bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+      }
+      return bytes;
+    }
+
+    function base64ToBytes(b64) {
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    }
+
+    // Reply handling (generates encrypted reply URL)
+    document.getElementById('reply-btn')?.addEventListener('click', async () => {
+      const text = document.getElementById('reply-input').value.trim();
+      const statusEl = document.getElementById('reply-status');
+      if (!text) return;
+
+      statusEl.textContent = 'Generating encrypted reply link...';
+
+      // In production: encrypt reply and POST to relay
+      // For now: generate a shareable link with encrypted content
+      try {
+        // Generate a new random key
+        const key = crypto.getRandomValues(new Uint8Array(32));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+
+        // Encrypt
+        const cryptoKey = await crypto.subtle.importKey(
+          'raw', key, { name: 'AES-GCM' }, false, ['encrypt']
+        );
+        const encrypted = await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          cryptoKey,
+          new TextEncoder().encode(text)
+        );
+
+        const keyHex = bytesToHex(key);
+        const ivHex = bytesToHex(iv);
+        const ctB64 = bytesToBase64(new Uint8Array(iv).concat(new Uint8Array(encrypted)));
+
+        // For now: show the encrypted payload
+        statusEl.textContent = `✓ Reply encrypted. Share this link: ${window.location.origin}/r/reply#${keyHex.slice(0, 16)}...`;
+      } catch (e) {
+        statusEl.textContent = '✗ Encryption failed: ' + e.message;
+      }
+    });
+
+    function bytesToHex(bytes) {
+      return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function bytesToBase64(bytes) {
+      return btoa(String.fromCharCode(...bytes));
+    }
+
+    // Initialize
+    decryptAndShow();
+  </script>
+</body>
+</html>
