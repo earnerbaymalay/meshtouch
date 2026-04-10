@@ -10,6 +10,7 @@ use crate::db;
 use crate::models::*;
 
 /// Shared application state
+#[derive(Clone)]
 pub struct AppState {
     pub pool: sqlx::SqlitePool,
     pub config: crate::config::RelayConfig,

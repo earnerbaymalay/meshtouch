@@ -1,0 +1,2 @@
+fn(State<AppState>, axum::Json<RelayForwardRequest>) -> impl std::future::Future<Output = Result<axum::http::StatusCode, (axum::http::StatusCode, std::string::String)>> {relay_forward}
+fn(State<AppState>, axum::Json<RelayForwardRequest>) -> impl std::future::Future<Output = Result<axum::http::StatusCode, (axum::http::StatusCode, std::string::String)>> {relay_forward}: Handler<_, _>

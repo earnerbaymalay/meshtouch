@@ -1,0 +1,2 @@
+fn(State<AppState>, axum::extract::Path<std::string::String>) -> impl std::future::Future<Output = Result<axum::http::StatusCode, std::string::String>> {ack_message}
+fn(State<AppState>, axum::extract::Path<std::string::String>) -> impl std::future::Future<Output = Result<axum::http::StatusCode, std::string::String>> {ack_message}: Handler<_, _>

@@ -1,0 +1,2 @@
+fn(State<AppState>, axum::extract::Path<std::string::String>) -> impl std::future::Future<Output = Result<axum::Json<FetchMessagesResponse>, (axum::http::StatusCode, std::string::String)>> {fetch_messages}
+fn(State<AppState>, axum::extract::Path<std::string::String>) -> impl std::future::Future<Output = Result<axum::Json<FetchMessagesResponse>, (axum::http::StatusCode, std::string::String)>> {fetch_messages}: Handler<_, _>

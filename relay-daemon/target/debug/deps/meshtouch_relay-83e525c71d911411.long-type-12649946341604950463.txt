@@ -1,0 +1,2 @@
+fn(State<AppState>, axum::Json<StoreMessageRequest>) -> impl std::future::Future<Output = Result<axum::Json<StoreMessageResponse>, (axum::http::StatusCode, std::string::String)>> {api::store_message}
+fn(State<AppState>, axum::Json<StoreMessageRequest>) -> impl std::future::Future<Output = Result<axum::Json<StoreMessageResponse>, (axum::http::StatusCode, std::string::String)>> {api::store_message}: Handler<_, _>

@@ -1,0 +1,2 @@
+fn(State<AppState>) -> impl std::future::Future<Output = axum::Json<Vec<PeerInfo>>> {list_peers}
+fn(State<AppState>) -> impl std::future::Future<Output = axum::Json<Vec<PeerInfo>>> {list_peers}: Handler<_, _>

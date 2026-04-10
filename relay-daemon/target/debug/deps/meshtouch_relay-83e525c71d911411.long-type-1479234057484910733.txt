@@ -1,0 +1,2 @@
+fn(State<AppState>, axum::Json<RegisterRequest>) -> impl std::future::Future<Output = Result<axum::Json<RegisterResponse>, (axum::http::StatusCode, std::string::String)>> {register_key}
+fn(State<AppState>, axum::Json<RegisterRequest>) -> impl std::future::Future<Output = Result<axum::Json<RegisterResponse>, (axum::http::StatusCode, std::string::String)>> {register_key}: Handler<_, _>
