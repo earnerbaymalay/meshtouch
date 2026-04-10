@@ -92,7 +92,7 @@ Alice (app) --encrypted--> Relay --encrypted--> Bob (app)
 
 | Project | Platform | Description | Link |
 |---------|----------|-------------|------|
-| 🛡️ **Cyph3rChat** | 📱 Android | E2E encrypted messaging (Double Ratchet) | [Source →](https://github.com/earnerbaymalay/cyph3rchat) |
+| 🛡️ **Cyph3rChat** | 📱 Android | E2E encrypted messaging (Double Ratchet) | [Source →](https://github.com/earnerbaymalay/e2eecc) |
 | 🌌 **Aether** | 📱 Android (Termux) | Local-first AI workstation | [Source →](https://github.com/earnerbaymalay/aether) |
 | 📲 **Sideload Hub** | 🌐 Web / PWA | Central app distribution | [Open Hub →](https://earnerbaymalay.github.io/sideload/) |
 
