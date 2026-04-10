@@ -78,6 +78,13 @@ async fn main() {
             std::process::exit(1);
         });
 
+    // Start background tasks
+    let cleanup_pool = pool.clone();
+    let cleanup_interval = config.cleanup_interval_minutes;
+    tokio::spawn(async move {
+        store::start_cleanup_task(cleanup_pool, cleanup_interval).await;
+    });
+
     // Build application state
     let state = api::AppState {
         pool,

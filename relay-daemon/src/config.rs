@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::time::Instant;
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize)]
 pub struct RelayConfig {
     pub relay_id: String,
     pub host: String,
@@ -11,8 +11,24 @@ pub struct RelayConfig {
     pub max_messages_per_user: usize,
     pub cleanup_interval_minutes: u64,
     pub known_peers: Vec<PeerConfig>,
-    #[serde(skip)]
+    #[serde(skip, default = "Instant::now")]
     pub start_time: Instant,
+}
+
+impl Clone for RelayConfig {
+    fn clone(&self) -> Self {
+        Self {
+            relay_id: self.relay_id.clone(),
+            host: self.host.clone(),
+            port: self.port,
+            database_path: self.database_path.clone(),
+            max_message_size: self.max_message_size,
+            max_messages_per_user: self.max_messages_per_user,
+            cleanup_interval_minutes: self.cleanup_interval_minutes,
+            known_peers: self.known_peers.clone(),
+            start_time: Instant::now(), // reset on clone
+        }
+    }
 }
 
 #[derive(Deserialize, Clone)]
