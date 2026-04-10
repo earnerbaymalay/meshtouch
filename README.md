@@ -1,12 +1,15 @@
-# MeshRelay
+<div align="center">
 
-Encrypted messaging through a relay network. It functions even when the recipient does not have the app installed.
+# ⬡ M E S H T O U C H
+### *Encrypted Messaging & Hybrid Relay Network.*
 
-[![Status](https://img.shields.io/badge/status-foundation-50fa7b?style=for-the-badge)]()
-[![Privacy](https://img.shields.io/badge/privacy-E2E_encrypted-bd93f9?style=for-the-badge)](docs/SECURITY.md)
-[![License](https://img.shields.io/badge/license-MIT-f1fa8c?style=for-the-badge)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Foundation-50fa7b?style=for-the-badge)]()
+[![Privacy](https://img.shields.io/badge/Privacy-E2E_Encrypted-bd93f9?style=for-the-badge)](docs/SECURITY.md)
+[![License](https://img.shields.io/badge/License-MIT-f1fa8c?style=for-the-badge)](LICENSE)
 
-[Architecture](#architecture) · [Quick start](#quick-start) · [Run a relay](#run-a-relay) · [Web reader](#web-reader) · [Security](#trust-model)
+**[📲 View the Hub](https://earnerbaymalay.github.io/sideload/)**
+
+</div>
 
 ---
 
@@ -41,7 +44,7 @@ Alice (app) --encrypted--> Relay --encrypted--> Bob (app)
 ```
 meshtouch/
 ├── relay-daemon/     # Rust relay server (Axum, SQLite)
-├── mobile-app/       # Android client (Kotlin, e2eecc crypto)
+├── cyph3rchat/       # Android client (Kotlin, cyph3rchat crypto)
 ├── web-reader/       # Browser-based reader (HTML, Web Crypto)
 ├── sms-gateway/      # SMS/Email bridge (Python)
 └── docs/
